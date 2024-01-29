@@ -55,11 +55,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(4);
+    options.IdleTimeout = TimeSpan.FromMinutes(10);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
 builder.Services.AddTransient<IEmailSender, NoOpEmailSender>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMyWebApp",
+       builder =>
+       {
+           builder.WithOrigins("http://localhost:5001") // Replace with the URL of your web app
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+       });
+});
+
 // Add services to the container.
 builder.Services.AddProblemDetails();
 
