@@ -1,6 +1,81 @@
 ﻿@page "/LogIn"
-<h3>LogIn</h3>
+@using System.ComponentModel.DataAnnotations
+@using static System.Net.WebRequestMethods
+@using System.Text.Json
+@using RealCreate.Web.Responses
+@inject NavigationManager NavManager
+
+<h3>Log In</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <label for="username">Username:</label>
+    <InputText id="username" @bind-Value="loginModel.Email" class="form-control" />
+    <span class="text-danger">@errorMessage</span>
+
+    <label for="password">Password:</label>
+    <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" />
+    <span class="text-danger">@errorMessage</span>
+
+    <button type="submit" class="btn btn-primary mt-2">Log In</button>
+</EditForm>
 
 @code {
+    [SupplyParameterFromForm]
+    private LoginModel loginModel { get; set; }
+    private string errorMessage;
 
+    protected override async Task OnInitializedAsync()
+    {
+        
+         loginModel ??= new();
+    } 
+
+        
+    private async Task HandleLogin()
+    {
+        HttpClient httpClient = new HttpClient();
+        var response = await httpClient.PostAsJsonAsync("http://localhost:5430/api/account/login", loginModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle successful login here
+            response = await httpClient.GetAsync("http://localhost:5430/api/account/IsAuthenticated");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                var json = JsonSerializer.Deserialize<AuthResponse>(content,options);
+
+                if (json.IsAuthenticated)
+                {
+                    // Redirect the user to the login page
+                    NavManager.NavigateTo("/");
+                }
+            }
+            else
+            {
+                NavManager.NavigateTo("/logIn");
+            }
+
+        }
+        else
+        {
+            // Handle unsuccessful login here
+            errorMessage = "Invalid username or password";
+        }
+    }
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Username is required")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; }
+    }
 }
