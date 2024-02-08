@@ -1,9 +1,13 @@
 ﻿@page "/LogIn"
 @using System.ComponentModel.DataAnnotations
+@using RealCreate.Web.AuthProviders
+@using RealCreate.Web.Services
 @using static System.Net.WebRequestMethods
 @using System.Text.Json
 @using RealCreate.Web.Responses
 @inject NavigationManager NavManager
+@inject LocalStorageService localStorageService
+@rendermode InteractiveServer
 
 <h3>Log In</h3>
 
@@ -23,16 +27,15 @@
 
 @code {
     [SupplyParameterFromForm]
-    private LoginModel loginModel { get; set; }
+    private LoginModel loginModel {get; set; }
     private string errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        
-         loginModel ??= new();
-    } 
+        loginModel ??= new();
+    }
+    private string? authToken;
 
-        
     private async Task HandleLogin()
     {
         HttpClient httpClient = new HttpClient();
@@ -40,35 +43,21 @@
 
         if (response.IsSuccessStatusCode)
         {
-            // Handle successful login here
-            response = await httpClient.GetAsync("http://localhost:5430/api/account/IsAuthenticated");
+            authToken = await response.Content.ReadAsStringAsync();
+            LoginToken loginToken = JsonSerializer.Deserialize<LoginToken>(authToken);
+            await localStorageService.SetItemAsync("authToken", loginToken.token);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
-                var json = JsonSerializer.Deserialize<AuthResponse>(content,options);
-
-                if (json.IsAuthenticated)
-                {
-                    // Redirect the user to the login page
-                    NavManager.NavigateTo("/");
-                }
-            }
-            else
-            {
-                NavManager.NavigateTo("/logIn");
-            }
-
+            var authService = new UserAuthenticationService(localStorageService);
+            await authService.AuthenticateUserAsync();
+            await authService.GetAuthenticationStateAsync();
+            NavManager.NavigateTo("/counter");
         }
         else
         {
             // Handle unsuccessful login here
             errorMessage = "Invalid username or password";
         }
+
     }
     public class LoginModel
     {
@@ -77,5 +66,10 @@
 
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
+    }
+
+    public class LoginToken
+    {
+        public string token { get; set; }
     }
 }

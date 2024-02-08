@@ -11,29 +11,29 @@
 Welcome to your new app.
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        await CheckAuthentication();
-    }
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     await CheckAuthentication();
+    // }
 
-    private async Task CheckAuthentication()
-    {
-        var response = await Http.GetAsync("http://localhost:5430/api/account/IsAuthenticated");
+    // private async Task CheckAuthentication()
+    // {
+    //     var response = await Http.GetAsync("http://localhost:5430/api/account/IsAuthenticated");
 
-        if (response.IsSuccessStatusCode)
-        {
-            var content = await response.Content.ReadAsStringAsync();
-            var json = JsonSerializer.Deserialize<AuthResponse>(content);
+    //     if (response.IsSuccessStatusCode)
+    //     {
+    //         var content = await response.Content.ReadAsStringAsync();
+    //         var json = JsonSerializer.Deserialize<AuthResponse>(content);
 
-            if (!json.IsAuthenticated)
-            {
-                // Redirect the user to the login page
-                NavManager.NavigateTo("/logIn");
-            }
-        }
-        else
-        {   
-            NavManager.NavigateTo("/logIn");
-        }
-    }
+    //         if (!json.IsAuthenticated)
+    //         {
+    //             // Redirect the user to the login page
+    //             NavManager.NavigateTo("/logIn");
+    //         }
+    //     }
+    //     else
+    //     {   
+    //         NavManager.NavigateTo("/logIn");
+    //     }
+    // }
 }
