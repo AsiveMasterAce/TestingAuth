@@ -1,11 +1,14 @@
 ﻿@page "/LogIn"
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Server
 @using RealCreate.Web.AuthProviders
 @using RealCreate.Web.Services
 @using static System.Net.WebRequestMethods
 @using System.Text.Json
 @using RealCreate.Web.Responses
+@using System.Security.Claims
 @inject NavigationManager NavManager
 @inject LocalStorageService localStorageService
 @inject IHttpContextAccessor HttpAccessor
@@ -35,8 +38,8 @@
 
 @code {
 
-    [SupplyParameterFromForm]
-    private LoginModel loginModel {get; set; }
+        [SupplyParameterFromForm]
+        private LoginModel loginModel {get; set; }
     private string errorMessage;
 
 
@@ -48,8 +51,8 @@
 
     private async Task HandleLogin()
     {
-
         HttpClient httpClient = new HttpClient();
+
         var response = await httpClient.PostAsJsonAsync("http://localhost:5430/api/account/login", loginModel);
 
         if (response.IsSuccessStatusCode)
@@ -59,18 +62,35 @@
 
             await localStorageService.SetItemAsync("authToken", loginToken.token);
 
+            string jwtCookie = await localStorageService.GetItemAsync("authToken");
+
+            var claims = authService.GetIdentityFromTokenList(jwtCookie);
+
+            var claimsIdentity = new ClaimsIdentity(claims, "JWTCookie");
+            var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(2),
+
+                };
+            // Sign the user in with the authentication properties
+
+            ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            // await HttpAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+            try
+            {
+
+                await HttpAccessor.HttpContext.SignInAsync(claimsPrincipal, authProperties);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"{exception}");
+             }
 
             await authService.AuthenticateUserAsync();
-            await authService.GetAuthenticationStateAsync();
-            string jwtCookie=   await localStorageService.GetItemAsync("authToken");
-
-            
-
             StateHasChanged();
-
-
-           
-            //NavManager.NavigateTo("/counter");
+            NavManager.NavigateTo("/counter",true);
         }
         else
         {

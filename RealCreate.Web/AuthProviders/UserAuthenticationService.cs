@@ -42,13 +42,21 @@ namespace RealCreate.Web.AuthProviders
             }
         }
 
-        private ClaimsIdentity GetIdentityFromToken(string token)
+        public ClaimsIdentity GetIdentityFromToken(string token)
         {
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(token);
 
             var claims = jwtSecurityToken.Claims.Select(claim => new Claim(claim.Type, claim.Value)).ToList();
             return new ClaimsIdentity(claims, "jwt");
+        } 
+        public IEnumerable<Claim> GetIdentityFromTokenList(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(token);
+
+            var claims = jwtSecurityToken.Claims.Select(claim => new Claim(claim.Type, claim.Value)).ToList();
+            return claims;
         }
 
 
