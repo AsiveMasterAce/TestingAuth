@@ -1,5 +1,6 @@
 ﻿@page "/LogIn"
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Server
 @using RealCreate.Web.AuthProviders
 @using RealCreate.Web.Services
 @using static System.Net.WebRequestMethods
@@ -7,13 +8,20 @@
 @using RealCreate.Web.Responses
 @inject NavigationManager NavManager
 @inject LocalStorageService localStorageService
+@inject IHttpContextAccessor HttpAccessor
+@inject UserAuthenticationService authService
 @rendermode InteractiveServer
 
 <h3>Log In</h3>
 
+<AuthorizeView>
+    Hello @context.User.Identity?.Name;
+</AuthorizeView>
+
 <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post">
     <DataAnnotationsValidator />
     <ValidationSummary />
+
     <label for="username">Username:</label>
     <InputText id="username" @bind-Value="loginModel.Email" class="form-control" />
     <span class="text-danger">@errorMessage</span>
@@ -26,9 +34,11 @@
 </EditForm>
 
 @code {
+
     [SupplyParameterFromForm]
     private LoginModel loginModel {get; set; }
     private string errorMessage;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,6 +48,7 @@
 
     private async Task HandleLogin()
     {
+
         HttpClient httpClient = new HttpClient();
         var response = await httpClient.PostAsJsonAsync("http://localhost:5430/api/account/login", loginModel);
 
@@ -45,12 +56,21 @@
         {
             authToken = await response.Content.ReadAsStringAsync();
             LoginToken loginToken = JsonSerializer.Deserialize<LoginToken>(authToken);
+
             await localStorageService.SetItemAsync("authToken", loginToken.token);
 
-            var authService = new UserAuthenticationService(localStorageService);
+
             await authService.AuthenticateUserAsync();
             await authService.GetAuthenticationStateAsync();
-            NavManager.NavigateTo("/counter");
+            string jwtCookie=   await localStorageService.GetItemAsync("authToken");
+
+            
+
+            StateHasChanged();
+
+
+           
+            //NavManager.NavigateTo("/counter");
         }
         else
         {
