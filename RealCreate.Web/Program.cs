@@ -1,4 +1,5 @@
 
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -19,6 +20,7 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddCascadingAuthenticationState();
+
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddOutputCache();
@@ -46,6 +48,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         //};
     });
 
+
+builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddScoped<UserAuthenticationService>();
 builder.Services.AddScoped<LocalStorageService>();

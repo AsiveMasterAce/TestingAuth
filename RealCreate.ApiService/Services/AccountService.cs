@@ -45,7 +45,7 @@ namespace RealCreate.ApiService.Services
                     // Store the user ID in the session
                     _httpContextAccessor.HttpContext.Session.SetString("UserEmail", user.Email);
                     // Generate access token
-                    var token = CreateAccessToken(_jwtOptions, user.UserName, TimeSpan.FromMinutes(10));
+                    var token = CreateAccessToken(_jwtOptions, user.UserName, TimeSpan.FromMinutes(30));
 
                     // Return the token in the response
                     return new OkObjectResult( new {token});

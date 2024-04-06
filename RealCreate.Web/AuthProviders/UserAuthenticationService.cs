@@ -7,39 +7,42 @@ using System.Transactions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Blazored.SessionStorage;
+using Microsoft.AspNetCore.Authentication;
 
 namespace RealCreate.Web.AuthProviders
 {
     public class UserAuthenticationService : AuthenticationStateProvider
     {
         private readonly LocalStorageService _localStorage;
-    
-                
-        public UserAuthenticationService(LocalStorageService localStorage)
+        private readonly ISessionStorageService _SessionStorage;
+
+
+        public UserAuthenticationService(LocalStorageService localStorage, ISessionStorageService session)
         {
             _localStorage = localStorage;
+            _SessionStorage = session;
         }
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            string token = await _localStorage.GetItemAsync("authToken");
+            string token = await _SessionStorage.GetItemAsync<string>("authToken");
 
             if (string.IsNullOrEmpty(token))
             {
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
-            else
-            {
-                HttpContextAccessor httpContextAccessor = new HttpContextAccessor();
 
-                var identity = GetIdentityFromToken(token);
-                var principal = new ClaimsPrincipal(identity);
-                if (httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    identity = (ClaimsIdentity)httpContextAccessor.HttpContext.User.Identity;
-                    principal = new ClaimsPrincipal(identity);
-                }
-                return await Task.FromResult(new  AuthenticationState(principal));
+            HttpContextAccessor httpContextAccessor = new HttpContextAccessor();
+
+            var identity = GetIdentityFromToken(token);
+            var principal = new ClaimsPrincipal(identity);
+            if (httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                identity = (ClaimsIdentity)httpContextAccessor.HttpContext.User.Identity;
+                principal = new ClaimsPrincipal(identity);
             }
+            return await Task.FromResult(new AuthenticationState(principal));
+
         }
 
         public ClaimsIdentity GetIdentityFromToken(string token)
@@ -59,10 +62,19 @@ namespace RealCreate.Web.AuthProviders
             return claims;
         }
 
+        public void AuthenticateUser(string token)
+        {
+            var identity = GetIdentityFromToken(token);
+            var user = new ClaimsPrincipal(identity);
+            var state = new AuthenticationState(user);
+            NotifyAuthenticationStateChanged(Task.FromResult(state));
 
+            //HttpContextAccessor httpContextAccessor = new HttpContextAccessor();
+            //httpContextAccessor.HttpContext.SignInAsync()
+        }
         public async Task AuthenticateUserAsync()
         {
-            var token = await _localStorage.GetItemAsync("authToken");
+            var token = await _SessionStorage.GetItemAsync<string>("authToken");
             if (!string.IsNullOrEmpty(token))
             {
                 var identity = GetIdentityFromToken(token);
