@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Server
 @using RealCreate.Web.AuthProviders
+@using RealCreate.Web.Controllers
 @using RealCreate.Web.Services
 @using static System.Net.WebRequestMethods
 @using System.Text.Json
@@ -13,7 +14,7 @@
 @inject NavigationManager NavManager
 @inject LocalStorageService localStorageService
 @inject IHttpContextAccessor HttpAccessor
-@inject UserAuthenticationService authService
+@inject AuthServices authService
 @rendermode InteractiveServer
 @inject ISessionStorageService SessionStorage
 
@@ -65,10 +66,13 @@
             await SessionStorage.SetItemAsync("authToken", loginToken.token);
 
             string jwtCookie = await SessionStorage.GetItemAsync<string>("authToken");
-            authService.AuthenticateUser(jwtCookie);
-         
+            ClaimsIdentity claims = authService.GetIdentityFromToken(jwtCookie);
+
+            authService.SignInPost(claims);
+            authService.AuthenticateUser(loginToken.token);
+
             StateHasChanged();
-            NavManager.NavigateTo("/",true);
+            // NavManager.NavigateTo("/",true);
         }
         else
         {

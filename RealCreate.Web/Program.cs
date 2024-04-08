@@ -20,7 +20,7 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddCascadingAuthenticationState();
-
+builder.Services.AddControllers();
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddOutputCache();
@@ -33,25 +33,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/logIn";
         options.Cookie.Name = "RealCreate";
-
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(2);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
-
-        //options.Events.OnSignedIn = context => {
-        //    var httpContext = context.HttpContext;
-        //    httpContext.Items["Properties"] = context.Properties;
-        //    httpContext.Features.Set(context.Properties);
-        //    return Task.CompletedTask;
-        //};
     });
+
 
 
 builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddScoped<UserAuthenticationService>();
+builder.Services.AddScoped<CookieAuthStateProvider>();
+builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddHttpClient<WeatherApiClient>(client=> client.BaseAddress = new("http://apiservice"));
 //var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
@@ -76,5 +70,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
     
 app.MapDefaultEndpoints();
+app.MapControllers();
 
 app.Run();
