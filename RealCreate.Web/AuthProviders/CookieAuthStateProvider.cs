@@ -11,7 +11,7 @@ namespace RealCreate.Web.AuthProviders
         public CookieAuthStateProvider(ILoggerFactory logger) : base(logger) { }
 
         // Implement the RevalidationInterval property
-        protected override TimeSpan RevalidationInterval => TimeSpan.FromSeconds(10); // Adjust the interval as needed
+        protected override TimeSpan RevalidationInterval => TimeSpan.FromSeconds(50); // Adjust the interval as needed
 
         // Correctly implement the ValidateAuthenticationStateAsync method
         protected override Task<bool> ValidateAuthenticationStateAsync(AuthenticationState authenticationState, CancellationToken cancellationToken)

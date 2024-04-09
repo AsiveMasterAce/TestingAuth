@@ -9,12 +9,15 @@
 <h1>Counter</h1>
 <AuthorizeView>
     <Authorized>
-        <h1>Hello </h1>
+        <h1>Hello Authorized User</h1>
         <p role="status">Current count: @currentCount</p>
         <p>Authentication status: @authMessage</p>
 
         <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
     </Authorized>
+    <NotAuthorized>
+        <h4>hello Not Authorized</h4>
+    </NotAuthorized>
 </AuthorizeView>
 
 @code {

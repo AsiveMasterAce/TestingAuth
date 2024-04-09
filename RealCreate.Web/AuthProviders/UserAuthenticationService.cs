@@ -23,26 +23,31 @@ namespace RealCreate.Web.AuthProviders
             _localStorage = localStorage;
             _SessionStorage = session;
         }
+        //public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        //{
+        //    string token = await _SessionStorage.GetItemAsync<string>("authToken");
+
+        //    if (string.IsNullOrEmpty(token))
+        //    {
+        //        return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+        //    }
+
+        //    HttpContextAccessor httpContextAccessor = new HttpContextAccessor();
+
+        //    var identity = GetIdentityFromToken(token);
+        //    var principal = new ClaimsPrincipal(identity);
+        //    if (httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        //    {
+        //        identity = (ClaimsIdentity)httpContextAccessor.HttpContext.User.Identity;
+        //        principal = new ClaimsPrincipal(identity);
+        //    }
+        //    return await Task.FromResult(new AuthenticationState(principal));
+
+        //}
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            string token = await _SessionStorage.GetItemAsync<string>("authToken");
-
-            if (string.IsNullOrEmpty(token))
-            {
-                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-            }
-
-            HttpContextAccessor httpContextAccessor = new HttpContextAccessor();
-
-            var identity = GetIdentityFromToken(token);
-            var principal = new ClaimsPrincipal(identity);
-            if (httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            {
-                identity = (ClaimsIdentity)httpContextAccessor.HttpContext.User.Identity;
-                principal = new ClaimsPrincipal(identity);
-            }
-            return await Task.FromResult(new AuthenticationState(principal));
-
+            AuthenticationState authState = await GetAuthenticationStateAsync();
+            return authState;
         }
 
         public ClaimsIdentity GetIdentityFromToken(string token)

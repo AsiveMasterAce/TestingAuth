@@ -1,0 +1,23 @@
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            // Redirect to login page if the user is not authenticated
+            NavigationManager.NavigateTo("/LogIn");
+        }
+        else
+        {
+            // Render the component if the user is authenticated
+            // This can be done by rendering the child content or by setting a flag that controls the rendering of the child content
+        }
+    }
+}

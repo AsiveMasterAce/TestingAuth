@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,6 +15,38 @@ namespace RealCreate.Web.Services
         public AuthServices(IHttpContextAccessor httpContext) { 
         
             _contextAccessor = httpContext;
+        }
+
+        private AuthenticationState _authState;
+        public event Action OnChange;
+        public AuthenticationState AuthState
+        {
+            get => _authState;
+            set
+            {
+                _authState = value;
+                NotifyStateChanged();
+            }
+        }
+
+        private void NotifyStateChanged() => OnChange?.Invoke();
+
+        public void AddHeaders()
+        {
+            if (!_contextAccessor.HttpContext.Response.HasStarted)
+            {
+                _contextAccessor.HttpContext.Response.OnStarting(state =>
+                {
+                    var context = (HttpContext)state;
+                    context.Response.Cookies.Append("RealCreate", "jwts", new CookieOptions { Expires = DateTimeOffset.UtcNow.AddMinutes(10) });
+                    return Task.CompletedTask;
+                }, _contextAccessor.HttpContext);
+            }
+            else
+            {
+                // Handle the case where the response has already started
+                // This might involve logging an error or throwing an exception
+            }
         }
         public void AuthenticateUser(string token)
         {
@@ -36,23 +69,17 @@ namespace RealCreate.Web.Services
         {
             try
             {
+                _contextAccessor.HttpContext.Response.HasStarted.Equals(false);
 
-                var claimsIdentity = new ClaimsIdentity(claims);
-
-                var authProperties = COOKIE_EXPIRES;
-
-                // Set a callback to set the cookie before the response starts
-                _contextAccessor.HttpContext.Response.OnStarting(state =>
-                {
-                    var context = (HttpContext)state;
-                    context.Response.Cookies.Append("RealCreate", "jwts", new CookieOptions { Expires = DateTimeOffset.UtcNow.AddMinutes(10) });
-                    return Task.CompletedTask;
-                }, _contextAccessor.HttpContext);
-
-                await _contextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                                              new ClaimsPrincipal(claimsIdentity),
-                                              authProperties);
+              
+                
+                    var authProperties = COOKIE_EXPIRES;
+                    await _contextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                                                  new ClaimsPrincipal(claims),
+                                                  authProperties);
+                
             }
+            
             catch (Exception ex)
             {
 
@@ -61,10 +88,8 @@ namespace RealCreate.Web.Services
 
         private static readonly AuthenticationProperties COOKIE_EXPIRES = new AuthenticationProperties()
         {
-            
             ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
             IsPersistent = true,
-           
         };
     }
 }

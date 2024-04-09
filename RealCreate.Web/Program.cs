@@ -3,10 +3,13 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Server.IISIntegration;
 using Microsoft.IdentityModel.Tokens;
 using RealCreate.Web;
 using RealCreate.Web.AuthProviders;
 using RealCreate.Web.Components;
+using RealCreate.Web.MiddleWare;
 using RealCreate.Web.Responses;
 using RealCreate.Web.Services;
 using System.Text;
@@ -43,6 +46,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddBlazoredSessionStorage();
 
+builder.Services.AddScoped<IHostEnvironmentAuthenticationStateProvider>(sp =>
+                (ServerAuthenticationStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
+
+//builder.Services.AddAuthentication(IISDefaults.AuthenticationScheme);
 builder.Services.AddScoped<UserAuthenticationService>();
 builder.Services.AddScoped<CookieAuthStateProvider>();
 builder.Services.AddScoped<AuthServices>();
@@ -58,6 +65,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 
+//app.UseMiddleware<CustomMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();

@@ -3,6 +3,7 @@
 @using Blazored.SessionStorage
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Server
 @using RealCreate.Web.AuthProviders
 @using RealCreate.Web.Controllers
@@ -15,16 +16,19 @@
 @inject LocalStorageService localStorageService
 @inject IHttpContextAccessor HttpAccessor
 @inject AuthServices authService
+@inject IHostEnvironmentAuthenticationStateProvider HostAuthentication;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject CookieAuthStateProvider CookieAuthProvider;
 @rendermode InteractiveServer
 @inject ISessionStorageService SessionStorage
 
 <h3>Log In</h3>
 
 <AuthorizeView>
-    Hello @context.User.Identity?.Name;
+    Hello @context.User.Identity?.Name Authenticated
 </AuthorizeView>
 
-<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post">
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post" >
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -52,6 +56,7 @@
     }
     private string? authToken;
 
+
     private async Task HandleLogin()
     {
         HttpClient httpClient = new HttpClient();
@@ -67,12 +72,13 @@
 
             string jwtCookie = await SessionStorage.GetItemAsync<string>("authToken");
             ClaimsIdentity claims = authService.GetIdentityFromToken(jwtCookie);
+            var principal = new ClaimsPrincipal(claims);
+            HostAuthentication!.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal)));
 
-            authService.SignInPost(claims);
-            authService.AuthenticateUser(loginToken.token);
-
+            AuthenticationState authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
+            CookieAuthProvider.SetAuthenticationState(Task.FromResult(authState));
+            NavManager!.NavigateTo("/");
             StateHasChanged();
-            // NavManager.NavigateTo("/",true);
         }
         else
         {
