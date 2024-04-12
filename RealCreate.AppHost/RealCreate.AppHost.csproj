@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RealCreate.ApiService\RealCreate.ApiService.csproj" />
+    <ProjectReference Include="..\RealCreate.Web2\RealCreate.Web2.csproj" />
     <ProjectReference Include="..\RealCreate.Web\RealCreate.Web.csproj" />
   </ItemGroup>
 

@@ -63,7 +63,17 @@ namespace RealCreate.Web.Services
             var jwtSecurityToken = handler.ReadJwtToken(token);
 
             var claims = jwtSecurityToken.Claims.Select(claim => new Claim(claim.Type, claim.Value)).ToList();
+
             return new ClaimsIdentity(claims, "jwt");
+        }
+            
+        public IEnumerable<Claim> GetClaimsAsync(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(token);
+
+            var claims =  jwtSecurityToken.Claims.Select(claim => new Claim(claim.Type, claim.Value)).ToList();
+            return  claims;
         }
         public async void SignInPost(ClaimsIdentity claims)
         {

@@ -1,9 +1,14 @@
 ﻿@page "/"
 @using System.Text.Json
+@using Microsoft.AspNetCore.Components.Server
 @using RealCreate.Web.Responses
+@using System.Security.Claims
+@using RealCreate.Web.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
+@inject AuthServices authService
 
 @rendermode InteractiveServer
 
@@ -13,8 +18,13 @@
 
 <AuthorizeView>
     <h3>Asive</h3>
+    <a>
+
+    </a>
 </AuthorizeView>
+<h5> 
 Welcome to your new app.
+</h5>
 
 @code {
     protected override async Task OnInitializedAsync()
@@ -24,7 +34,23 @@ Welcome to your new app.
 
         if (user.Identity.IsAuthenticated)
         {
-            // User is authenticated
+            // User is already authenticated
+        }
+        else
+        {
+            // Check sessionStorage for an auth token
+            // var authToken = await SessionStorage.GetItemAsync<string>("authToken");
+            // if (!string.IsNullOrEmpty(authToken))
+            // {
+            //     ClaimsIdentity claims = authService.GetIdentityFromToken(authToken);
+            //     var principal = new ClaimsPrincipal(claims);
+            //     var authResult = Task.FromResult(new AuthenticationState(principal));
+
+            //     // if (AuthenticationStateProvider is ServerAuthenticationStateProvider serverAuthProvider)
+            //     // {
+            //     //     serverAuthProvider.NotifyAuthenticationStateChanged(authResult);
+            //     // }
+            // }
         }
     }
 }

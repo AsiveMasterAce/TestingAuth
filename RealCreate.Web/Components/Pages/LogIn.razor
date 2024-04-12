@@ -25,10 +25,10 @@
 <h3>Log In</h3>
 
 <AuthorizeView>
-    Hello @context.User.Identity?.Name Authenticated
+    Hello @HttpAccessor.HttpContext.User.Identity?.Name Authenticated
 </AuthorizeView>
 
-<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post" >
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm" method="post">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -48,7 +48,6 @@
     [SupplyParameterFromForm]
     private LoginModel loginModel {get; set; }
     private string errorMessage;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -72,11 +71,26 @@
 
             string jwtCookie = await SessionStorage.GetItemAsync<string>("authToken");
             ClaimsIdentity claims = authService.GetIdentityFromToken(jwtCookie);
-            var principal = new ClaimsPrincipal(claims);
+
+            var listClaims = authService.GetClaimsAsync(jwtCookie);
+
+            var identity = new ClaimsIdentity(listClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // var principal = new ClaimsPrincipal(claims);
+
+            var principal = new ClaimsPrincipal(identity);
+
+
             HostAuthentication!.SetAuthenticationState(Task.FromResult(new AuthenticationState(principal)));
 
-            AuthenticationState authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
-            CookieAuthProvider.SetAuthenticationState(Task.FromResult(authState));
+            // AuthenticationState authState = await AuthenticationStateProvider!.GetAuthenticationStateAsync();
+
+            // CookieAuthProvider.SetAuthenticationState(Task.FromResult(authState));
+
+            NavManager!.NavigateTo("/");
+            StateHasChanged();
+
+
             NavManager!.NavigateTo("/");
             StateHasChanged();
         }

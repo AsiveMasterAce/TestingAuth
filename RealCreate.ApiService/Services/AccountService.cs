@@ -10,6 +10,7 @@ using RealCreate.ApiService.Model;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace RealCreate.ApiService.Services
@@ -40,15 +41,14 @@ namespace RealCreate.ApiService.Services
                 {
                     // Get the user from the database
                     var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == model.Email);
+                    
+                    var loggedUser= await _userManager.FindByNameAsync(user.Email);
 
-
-                    // Store the user ID in the session
-                    _httpContextAccessor.HttpContext.Session.SetString("UserEmail", user.Email);
                     // Generate access token
                     var token = CreateAccessToken(_jwtOptions, user.UserName, TimeSpan.FromMinutes(30));
 
-                    // Return the token in the response
-                    return new OkObjectResult( new {token});
+					// Return the token in the response
+					return new OkObjectResult( new {token});
                 }
                 else
                 {
@@ -94,7 +94,14 @@ namespace RealCreate.ApiService.Services
                 throw;
             }
         }
-        static string CreateAccessToken(JwtOptions jwtOptions,string username,TimeSpan expiration)
+		private static string GenerateRefreshToken()
+		{
+			byte[] randomNumber = new byte[32];
+			using var rng = RandomNumberGenerator.Create();
+			rng.GetBytes(randomNumber);
+			return Convert.ToBase64String(randomNumber);
+		}
+		static string CreateAccessToken(JwtOptions jwtOptions,string username,TimeSpan expiration)
         {
             var keyBytes = Encoding.UTF8.GetBytes(jwtOptions.SigningKey);
             var symmetricKey = new SymmetricSecurityKey(keyBytes);
@@ -103,8 +110,9 @@ namespace RealCreate.ApiService.Services
 
                     var claims = new List<Claim>()
                     {
-                        new Claim("UserName", username),
-                        new Claim("email", username),
+                        new Claim("Username", username),
+                        new Claim("Email", username),
+                        new Claim("GivenName", username),
                         new Claim("audience", jwtOptions.Audience)
                     };
 
